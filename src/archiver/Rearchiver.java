@@ -24,9 +24,9 @@ public class Rearchiver {
 	
 	private static void parseFile(String arg) throws RarException, IOException{
 		if ((new File(arg)).isFile()){
-			if (arg.endsWith(".cbr")){
+			if (arg.toLowerCase().endsWith(".cbr")){
 				createZip(arg, "cbz");
-			}else if(arg.endsWith(".rar")){
+			}else if(arg.toLowerCase().endsWith(".rar")){
 				createZip(arg, "zip");
 			}
 		}else{
