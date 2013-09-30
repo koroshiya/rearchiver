@@ -4,6 +4,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import junrar.Archive;
@@ -22,12 +24,44 @@ public class Rearchiver {
 		}
 	}
 	
+	private static boolean isValid(final File file) {
+	    ZipFile zipfile = null;
+	    try {
+	        zipfile = new ZipFile(file);
+	        return true;
+	    } catch (ZipException e) {
+	        return false;
+	    } catch (IOException e) {
+	        return false;
+	    } finally {
+	        try {
+	            if (zipfile != null) {
+	                zipfile.close();
+	                zipfile = null;
+	            }
+	        } catch (IOException e) {
+	        }
+	    }
+	}
+	
 	private static void parseFile(String arg) throws RarException, IOException{
-		if ((new File(arg)).isFile()){
-			if (arg.toLowerCase().endsWith(".cbr")){
-				createZip(arg, "cbz");
-			}else if(arg.toLowerCase().endsWith(".rar")){
-				createZip(arg, "zip");
+		File input = new File(arg);
+		if ((input).isFile()){
+			String extension;
+			String lowerArg = arg.toLowerCase();
+			if (lowerArg.endsWith(".cbr")){
+				extension = "cbz";
+			}else if(lowerArg.endsWith(".rar")){
+				extension = "zip";
+			}else{
+				return;
+			}
+			if (isValid(input)){
+				int i = arg.lastIndexOf('.');
+				String newName = ((i > 0) ? arg.substring(0, i+1) : arg) + extension;
+				input.renameTo(new File(newName));
+			}else{
+				createZip(arg, extension);
 			}
 		}else{
 			parseDir(arg);
@@ -45,10 +79,9 @@ public class Rearchiver {
 		
 		File f = new File(path);
 		int i = path.lastIndexOf('.');
-		String newName = (i > 0) ? path.substring(0, i+1) + extension : path;
+		String newName = ((i > 0) ? path.substring(0, i+1) : path) + extension;
 		
 		Archive archive = new Archive(f);
-		//ZipFile zip = new ZipFile(newName);
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(newName));
         
 		for (FileHeader hd : archive.getFileHeaders()){
